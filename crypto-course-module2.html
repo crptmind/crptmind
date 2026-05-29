@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRYPTO MIND — Модуль 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F0E8;
+  --bg-card: #FFFDF8;
+  --red: #D63031;
+  --red-dark: #B71C1C;
+  --red-light: #FFEBEE;
+  --text: #2D2D2D;
+  --text-light: #5A5A5A;
+  --text-muted: #8A8A8A;
+  --accent-teal: #00897B;
+  --accent-blue: #1565C0;
+  --accent-orange: #F57C00;
+  --accent-purple: #6A1B9A;
+  --border: #E0D8CC;
+  --code-bg: #1E1E2E;
+  --code-text: #CDD6F4;
+  --shadow: 0 2px 20px rgba(0,0,0,0.06);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+.top-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(245, 240, 232, 0.95); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border); padding: 0 40px; height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-brand { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 18px; color: var(--red); letter-spacing: 3px; text-transform: uppercase; }
+.nav-module { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+.nav-progress { display: flex; align-items: center; gap: 8px; }
+.nav-progress-bar { width: 120px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.nav-progress-fill { height: 100%; background: var(--red); border-radius: 2px; transition: width 0.5s ease; }
+.nav-progress-text { font-size: 12px; color: var(--text-muted); font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+
+.sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 40; }
+.sidebar-overlay.show { display: block; }
+
+.sidebar {
+  position: fixed; left: 0; top: 64px; bottom: 0; width: 300px;
+  background: var(--bg-card); border-right: 1px solid var(--border);
+  padding: 30px 0; overflow-y: auto; z-index: 50; transition: transform 0.3s ease;
+}
+.sidebar-section-title { font-family: 'Oswald', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); padding: 0 24px; margin-bottom: 16px; }
+.sidebar-item {
+  display: flex; align-items: flex-start; gap: 14px; padding: 14px 24px;
+  cursor: pointer; transition: all 0.2s ease; border-left: 3px solid transparent;
+  text-decoration: none; color: inherit;
+}
+.sidebar-item:hover { background: rgba(214, 48, 49, 0.04); }
+.sidebar-item.active { background: rgba(214, 48, 49, 0.06); border-left-color: var(--red); }
+.sidebar-num {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;
+  color: var(--text-muted); min-width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; background: var(--bg); flex-shrink: 0;
+}
+.sidebar-item.active .sidebar-num { background: var(--red); color: white; }
+.sidebar-item.completed .sidebar-num { background: var(--accent-teal); color: white; }
+.sidebar-item-text { font-size: 13px; font-weight: 500; line-height: 1.5; }
+.sidebar-item-text small { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 2px; }
+
+.main { margin-left: 300px; padding-top: 64px; min-height: 100vh; }
+
+.lesson { display: none; animation: fadeIn 0.4s ease; }
+.lesson.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.lesson-hero {
+  padding: 80px 60px 60px; position: relative; overflow: hidden;
+}
+.lesson-hero.btc { background: linear-gradient(135deg, #F7931A, #E8760A); }
+.lesson-hero.eth { background: linear-gradient(135deg, #627EEA, #3C5BD8); }
+.lesson-hero.tokens { background: var(--red); }
+
+.lesson-hero::before {
+  content: ''; position: absolute; top: -60px; right: -60px;
+  width: 400px; height: 400px; background: rgba(255,255,255,0.04); border-radius: 50%;
+}
+.lesson-hero .module-tag {
+  font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500;
+  color: rgba(255,255,255,0.6); letter-spacing: 2px; text-transform: uppercase;
+  margin-bottom: 16px; position: relative; z-index: 1;
+}
+.lesson-hero h1 {
+  font-family: 'Oswald', sans-serif; font-size: clamp(40px, 5vw, 64px); font-weight: 700;
+  color: white; text-transform: uppercase; line-height: 1.1; letter-spacing: -1px;
+  position: relative; z-index: 1; max-width: 700px;
+}
+.lesson-hero .lesson-number {
+  font-family: 'Oswald', sans-serif; font-size: 160px; font-weight: 700;
+  color: rgba(255,255,255,0.08); position: absolute; right: 60px; bottom: -20px; line-height: 1;
+}
+
+.lesson-body { max-width: 820px; padding: 50px 60px 80px; }
+.lesson-body h2 { font-family: 'Oswald', sans-serif; font-size: 28px; font-weight: 600; color: var(--red); text-transform: uppercase; margin: 50px 0 20px; letter-spacing: 0.5px; }
+.lesson-body h2:first-child { margin-top: 0; }
+.lesson-body h3 { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 600; color: var(--text); margin: 35px 0 14px; }
+.lesson-body p { font-size: 16px; margin-bottom: 18px; color: var(--text); line-height: 1.8; }
+.lesson-body strong { color: var(--red-dark); font-weight: 600; }
+
+.analogy {
+  background: linear-gradient(135deg, #FFF8E1, #FFFDE7);
+  border-left: 4px solid #FFB300; border-radius: 0 12px 12px 0;
+  padding: 24px 28px; margin: 28px 0; position: relative;
+}
+.analogy::before { content: '💡'; font-size: 20px; position: absolute; top: -10px; left: -14px; background: var(--bg); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; }
+.analogy-title { font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: #F57F17; margin-bottom: 8px; }
+.analogy p { font-size: 15px; color: #5D4037; margin-bottom: 0; }
+
+.key-point {
+  background: var(--red-light); border-radius: 12px; padding: 24px 28px; margin: 28px 0;
+  border: 1px solid rgba(214, 48, 49, 0.15);
+}
+.key-point-title { font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; color: var(--red); margin-bottom: 8px; }
+.key-point p { font-size: 15px; color: var(--red-dark); margin-bottom: 0; }
+
+.info-block {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 28px; margin: 28px 0; position: relative; overflow: hidden;
+}
+.info-block .binary-bg { position: absolute; top: 0; right: 0; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(0,0,0,0.04); line-height: 1.6; padding: 10px; max-width: 250px; overflow: hidden; white-space: pre; pointer-events: none; }
+.info-block h4 { font-family: 'Oswald', sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text); }
+.info-block p, .info-block li { font-size: 15px; position: relative; z-index: 1; }
+.info-block ul { list-style: none; padding: 0; }
+.info-block ul li { padding: 8px 0 8px 28px; position: relative; border-bottom: 1px solid var(--border); }
+.info-block ul li:last-child { border-bottom: none; }
+.info-block ul li::before { content: '→'; color: var(--red); font-weight: 700; position: absolute; left: 0; }
+
+.comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 28px 0; }
+.comparison-col { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+.comparison-col.btc { border-color: #F7931A; border-width: 2px; }
+.comparison-col.eth { border-color: #627EEA; border-width: 2px; }
+.comparison-col.highlight { border-color: var(--red); background: var(--red-light); }
+.comparison-col h4 { font-family: 'Oswald', sans-serif; font-size: 16px; margin-bottom: 12px; color: var(--text); }
+.comparison-col p { font-size: 14px; margin-bottom: 8px; }
+
+.svg-container { margin: 32px 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; overflow: hidden; }
+.svg-container svg { width: 100%; height: auto; display: block; }
+.svg-caption { text-align: center; font-size: 13px; color: var(--text-muted); margin-top: 12px; font-style: italic; }
+
+.summary-box { background: linear-gradient(135deg, #E8F5E9, #F1F8E9); border: 1px solid #A5D6A7; border-radius: 12px; padding: 28px; margin: 40px 0 28px; }
+.summary-box h3 { font-family: 'Oswald', sans-serif; font-size: 18px; color: #2E7D32; margin: 0 0 14px; }
+.summary-box ul { list-style: none; padding: 0; }
+.summary-box ul li { padding: 6px 0 6px 24px; position: relative; font-size: 15px; }
+.summary-box ul li::before { content: '✓'; color: #2E7D32; font-weight: 700; position: absolute; left: 0; }
+
+.lesson-nav { display: flex; justify-content: space-between; gap: 16px; padding: 40px 0 0; border-top: 1px solid var(--border); margin-top: 40px; }
+.btn { font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 600; padding: 14px 32px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.25s ease; text-transform: uppercase; letter-spacing: 1px; }
+.btn-primary { background: var(--red); color: white; }
+.btn-primary:hover { background: var(--red-dark); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(214, 48, 49, 0.3); }
+.btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--bg); border-color: var(--text-muted); }
+
+/* Data table */
+.data-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 28px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+.data-table thead { background: var(--red); }
+.data-table th { font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 600; color: white; padding: 14px 16px; text-transform: uppercase; letter-spacing: 1px; text-align: left; }
+.data-table td { padding: 12px 16px; font-size: 14px; border-bottom: 1px solid var(--border); background: var(--bg-card); }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table .label-cell { font-weight: 600; font-size: 13px; color: var(--text-light); width: 160px; }
+
+/* Timeline */
+.timeline { position: relative; margin: 32px 0; padding-left: 40px; }
+.timeline::before { content: ''; position: absolute; left: 14px; top: 0; bottom: 0; width: 3px; background: var(--border); border-radius: 2px; }
+.timeline-item { position: relative; padding: 0 0 32px; }
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-dot { position: absolute; left: -33px; top: 4px; width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--red); background: var(--bg-card); }
+.timeline-item.btc-color .timeline-dot { border-color: #F7931A; }
+.timeline-item.eth-color .timeline-dot { border-color: #627EEA; }
+.timeline-year { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--red); margin-bottom: 4px; }
+.timeline-item.btc-color .timeline-year { color: #F7931A; }
+.timeline-item.eth-color .timeline-year { color: #627EEA; }
+.timeline-text { font-size: 14px; color: var(--text-light); }
+
+/* Coin card */
+.coin-card { background: var(--bg-card); border-radius: 16px; padding: 32px; margin: 28px 0; border: 2px solid var(--border); position: relative; overflow: hidden; }
+.coin-card.btc { border-color: #F7931A; }
+.coin-card.eth { border-color: #627EEA; }
+.coin-card .coin-icon { font-size: 48px; margin-bottom: 12px; }
+.coin-card h3 { font-family: 'Oswald', sans-serif; font-size: 24px; margin-bottom: 4px; }
+.coin-card .coin-ticker { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; margin-bottom: 16px; }
+.coin-card.btc .coin-ticker { color: #F7931A; }
+.coin-card.eth .coin-ticker { color: #627EEA; }
+
+/* Quiz */
+.quiz { background: var(--bg-card); border: 2px solid var(--border); border-radius: 12px; padding: 32px; margin: 32px 0; }
+.quiz h4 { font-family: 'Oswald', sans-serif; font-size: 18px; color: var(--red); margin-bottom: 6px; }
+.quiz p { font-size: 16px; color: var(--text); margin-bottom: 20px; line-height: 1.6; font-weight: 500; }
+.quiz-option { display: block; width: 100%; text-align: left; background: var(--bg); border: 2px solid var(--border); color: var(--text); padding: 14px 20px; border-radius: 10px; margin-bottom: 10px; cursor: pointer; font-family: 'Montserrat', sans-serif; font-size: 15px; line-height: 1.5; transition: all 0.2s ease; }
+.quiz-option:hover { background: #EDE8DD; border-color: var(--text-muted); }
+.quiz-option.correct { background: #E8F5E9; border-color: #4CAF50; color: #2E7D32; font-weight: 600; }
+.quiz-option.wrong { background: #FFEBEE; border-color: #EF5350; color: #C62828; }
+.quiz-feedback { margin-top: 16px; font-size: 15px; padding: 14px 18px; border-radius: 10px; display: none; line-height: 1.6; }
+.quiz-feedback.show { display: block; }
+.quiz-feedback.correct { background: #E8F5E9; color: #2E7D32; border: 1px solid #A5D6A7; }
+.quiz-feedback.wrong { background: #FFF3E0; color: #E65100; border: 1px solid #FFCC80; }
+
+.menu-toggle { display: none; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text); padding: 4px; }
+
+@media (max-width: 900px) {
+  .sidebar { transform: translateX(-100%); width: 280px; }
+  .sidebar.open { transform: translateX(0); box-shadow: 4px 0 30px rgba(0,0,0,0.15); }
+  .main { margin-left: 0; }
+  .lesson-hero { padding: 60px 28px 40px; }
+  .lesson-body { padding: 30px 28px 60px; }
+  .menu-toggle { display: block; }
+  .comparison { grid-template-columns: 1fr; }
+  .lesson-hero .lesson-number { font-size: 100px; right: 20px; }
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div style="display:flex;align-items:center;gap:16px;">
+    <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    <span class="nav-brand">Crypto Mind</span>
+  </div>
+  <span class="nav-module">Модуль 2 — Bitcoin, Ethereum и токены</span>
+  <div class="nav-progress">
+    <div class="nav-progress-bar">
+      <div class="nav-progress-fill" id="progressFill" style="width: 33%"></div>
+    </div>
+    <span class="nav-progress-text" id="progressText">1/3</span>
+  </div>
+</nav>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-section-title">Модуль 2 · Ключевые различия</div>
+  <a class="sidebar-item active" data-lesson="1" onclick="goToLesson(1)">
+    <span class="sidebar-num">04</span>
+    <span class="sidebar-item-text">Bitcoin: цифровое золото<small>Что такое BTC и почему он особенный</small></span>
+  </a>
+  <a class="sidebar-item" data-lesson="2" onclick="goToLesson(2)">
+    <span class="sidebar-num">05</span>
+    <span class="sidebar-item-text">Ethereum: мировой компьютер<small>Смарт-контракты и зачем они нужны</small></span>
+  </a>
+  <a class="sidebar-item" data-lesson="3" onclick="goToLesson(3)">
+    <span class="sidebar-num">06</span>
+    <span class="sidebar-item-text">Токены vs Коины<small>В чём разница и почему это важно</small></span>
+  </a>
+  <div style="padding: 24px; margin-top: 20px; border-top: 1px solid var(--border);">
+    <div class="sidebar-section-title" style="padding:0;margin-bottom:12px;">Все модули</div>
+    <div style="font-size:12px;color:var(--text-muted);line-height:1.6;">
+      <a href="crypto-course-module1.html" style="color:inherit;text-decoration:none;display:block;padding:2px 0;border-radius:3px;transition:color .2s" onmouseover="this.style.color='#D63031'" onmouseout="this.style.color=''"><span style="color:var(--accent-teal)">✓</span> М1 · Введение</a>
+      <a href="crypto-course-module2.html" style="color:inherit;text-decoration:none;display:block;padding:2px 0;border-radius:3px;transition:color .2s" onmouseover="this.style.color='#D63031'" onmouseout="this.style.color=''"><span style="color:var(--red)">●</span> М2 · Bitcoin, Ethereum, токены</a>
+      <a href="crypto-course-module3.html" style="color:inherit;text-decoration:none;display:block;padding:2px 0;border-radius:3px;transition:color .2s" onmouseover="this.style.color='#D63031'" onmouseout="this.style.color=''">М3 · Виды криптоактивов</a>
+      <a href="crypto-course-module4.html" style="color:inherit;text-decoration:none;display:block;padding:2px 0;border-radius:3px;transition:color .2s" onmouseover="this.style.color='#D63031'" onmouseout="this.style.color=''">М4 · Рынок и биржи</a>
+      <a href="crypto-course-module5.html" style="color:inherit;text-decoration:none;display:block;padding:2px 0;border-radius:3px;transition:color .2s" onmouseover="this.style.color='#D63031'" onmouseout="this.style.color=''">М5 · Безопасность</a>
+      <a href="crypto-course-module6.html" style="color:inherit;text-decoration:none;display:block;padding:2px 0;border-radius:3px;transition:color .2s" onmouseover="this.style.color='#D63031'" onmouseout="this.style.color=''">М6 · Покупка и MetaMask</a>
+      <a href="crypto-course-module7.html" style="color:inherit;text-decoration:none;display:block;padding:2px 0;border-radius:3px;transition:color .2s" onmouseover="this.style.color='#D63031'" onmouseout="this.style.color=''">М7 · Основы трейдинга</a>
+      <a href="crypto-course-module8.html" style="color:inherit;text-decoration:none;display:block;padding:2px 0;border-radius:3px;transition:color .2s" onmouseover="this.style.color='#D63031'" onmouseout="this.style.color=''">М8 · Технический анализ</a>
+      <a href="crypto-course-module9.html" style="color:inherit;text-decoration:none;display:block;padding:2px 0;border-radius:3px;transition:color .2s" onmouseover="this.style.color='#D63031'" onmouseout="this.style.color=''">М9 · Фундаментальный анализ</a>
+      <a href="crypto-course-module10.html" style="color:inherit;text-decoration:none;display:block;padding:2px 0;border-radius:3px;transition:color .2s" onmouseover="this.style.color='#D63031'" onmouseout="this.style.color=''">М10 · DeFi</a>
+      <a href="crypto-course-module11.html" style="color:inherit;text-decoration:none;display:block;padding:2px 0;border-radius:3px;transition:color .2s" onmouseover="this.style.color='#D63031'" onmouseout="this.style.color=''">М11 · Психология и циклы</a>
+      <a href="crypto-course-module12.html" style="color:inherit;text-decoration:none;display:block;padding:2px 0;border-radius:3px;transition:color .2s" onmouseover="this.style.color='#D63031'" onmouseout="this.style.color=''">М12 · Smart Money Concepts</a>
+      <a href="crypto-course-bonus-fintech.html" style="color:inherit;text-decoration:none;display:block;padding:2px 0;border-radius:3px;transition:color .2s" onmouseover="this.style.color='#D63031'" onmouseout="this.style.color=''">Бонус · Крипто-финтех</a>
+      <a href="crypto-course-bonus-macrodata.html" style="color:inherit;text-decoration:none;display:block;padding:2px 0;border-radius:3px;transition:color .2s" onmouseover="this.style.color='#D63031'" onmouseout="this.style.color=''">Бонус · Макро-данные</a>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- ==================== LESSON 1: BITCOIN ==================== -->
+<div class="lesson active" id="lesson-1">
+  <div class="lesson-hero btc">
+    <div class="module-tag">Модуль 02 · Урок 04</div>
+    <h1>Bitcoin: цифровое золото</h1>
+    <div class="lesson-number">(04)</div>
+  </div>
+  <div class="lesson-body">
+
+    <h2>Откуда взялся Bitcoin</h2>
+
+    <p>31 октября 2008 года. Мир в панике — крупнейшие банки рушатся, как карточные домики. Люди теряют сбережения, доверие к финансовой системе на нуле. И тут на малоизвестном форуме для криптографов появляется письмо от некоего <strong>Сатоши Накамото</strong>. В нём — 9-страничный документ (whitepaper), который описывает совершенно новую систему электронных денег.</p>
+
+    <p>3 января 2009 года Сатоши запускает сеть Bitcoin и создаёт первый блок — <strong>genesis block</strong>. В этом блоке он оставил послание — заголовок из газеты The Times: «Канцлер на грани второго спасения банков». Это не случайность. Это манифест: <strong>мы создаём деньги, которые не зависят от банков</strong>.</p>
+
+    <div class="analogy">
+      <div class="analogy-title">Аналогия</div>
+      <p>Представь, что кто-то изобрёл золото в цифровом виде. Его нельзя подделать, нельзя напечатать больше, чем заложено с самого начала, и оно принадлежит только тебе — пока ты хранишь свой ключ. Вот это и есть Bitcoin.</p>
+    </div>
+
+    <h2>Кто такой Сатоши Накамото?</h2>
+
+    <p>Никто не знает. Серьёзно. Это может быть один человек, группа программистов, кто-то из крупных учёных-криптографов — или вообще ИИ из будущего (шутка, но в крипто-сообществе чего только не обсуждали). Сатоши активно работал над Bitcoin до 2011 года, потом <strong>просто исчез</strong>. На его кошельках лежит около 1 миллиона BTC, и ни одна монета ни разу не двигалась.</p>
+
+    <p>И в этом есть что-то поэтичное: создатель новых денег не взял себе ни копейки. Bitcoin живёт без своего создателя — и это доказывает, что <strong>система работает без начальника</strong>.</p>
+
+    <h2>Почему Bitcoin называют «цифровым золотом»</h2>
+
+    <p>Это не просто красивая метафора. У Bitcoin и золота действительно много общего:</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg">
+        <!-- Title -->
+        <text x="360" y="28" font-family="Oswald, sans-serif" font-size="16" fill="#2D2D2D" text-anchor="middle" font-weight="600" text-transform="uppercase">BITCOIN vs ЗОЛОТО</text>
+
+        <!-- Gold column -->
+        <rect x="40" y="50" width="300" height="290" rx="14" fill="#FFFDF8" stroke="#D4A017" stroke-width="2"/>
+        <rect x="40" y="50" width="300" height="44" rx="14" fill="#D4A017"/>
+        <rect x="40" y="82" width="300" height="12" fill="#D4A017"/>
+        <text x="190" y="78" font-family="Oswald, sans-serif" font-size="15" fill="white" text-anchor="middle" font-weight="600">🪙  ЗОЛОТО</text>
+
+        <text x="60" y="118" font-family="Montserrat, sans-serif" font-size="12" fill="#5A5A5A" font-weight="600">Ограниченность</text>
+        <text x="60" y="136" font-family="Montserrat, sans-serif" font-size="11" fill="#8A8A8A">Ограничено природой (конечные запасы)</text>
+
+        <line x1="60" y1="150" x2="320" y2="150" stroke="#E0D8CC" stroke-width="1"/>
+
+        <text x="60" y="170" font-family="Montserrat, sans-serif" font-size="12" fill="#5A5A5A" font-weight="600">Добыча</text>
+        <text x="60" y="188" font-family="Montserrat, sans-serif" font-size="11" fill="#8A8A8A">Шахты, оборудование, труд людей</text>
+
+        <line x1="60" y1="202" x2="320" y2="202" stroke="#E0D8CC" stroke-width="1"/>
+
+        <text x="60" y="222" font-family="Montserrat, sans-serif" font-size="12" fill="#5A5A5A" font-weight="600">Хранение</text>
+        <text x="60" y="240" font-family="Montserrat, sans-serif" font-size="11" fill="#8A8A8A">Сейфы, хранилища, охрана</text>
+
+        <line x1="60" y1="254" x2="320" y2="254" stroke="#E0D8CC" stroke-width="1"/>
+
+        <text x="60" y="274" font-family="Montserrat, sans-serif" font-size="12" fill="#5A5A5A" font-weight="600">Перевод</text>
+        <text x="60" y="292" font-family="Montserrat, sans-serif" font-size="11" fill="#8A8A8A">Физическая доставка, дорого, медленно</text>
+
+        <line x1="60" y1="306" x2="320" y2="306" stroke="#E0D8CC" stroke-width="1"/>
+
+        <text x="60" y="326" font-family="Montserrat, sans-serif" font-size="12" fill="#5A5A5A" font-weight="600">Делимость</text>
+        <text x="60" y="344" font-family="Montserrat, sans-serif" font-size="11" fill="#8A8A8A">Сложно разделить слиток на части</text>
+
+        <!-- Bitcoin column -->
+        <rect x="380" y="50" width="300" height="290" rx="14" fill="#FFFDF8" stroke="#F7931A" stroke-width="2"/>
+        <rect x="380" y="50" width="300" height="44" rx="14" fill="#F7931A"/>
+        <rect x="380" y="82" width="300" height="12" fill="#F7931A"/>
+        <text x="530" y="78" font-family="Oswald, sans-serif" font-size="15" fill="white" text-anchor="middle" font-weight="600">₿  BITCOIN</text>
+
+        <text x="400" y="118" font-family="Montserrat, sans-serif" font-size="12" fill="#5A5A5A" font-weight="600">Ограниченность</text>
+        <text x="400" y="136" font-family="Montserrat, sans-serif" font-size="11" fill="#F7931A" font-weight="500">Ровно 21 000 000 BTC — навсегда</text>
+
+        <line x1="400" y1="150" x2="660" y2="150" stroke="#E0D8CC" stroke-width="1"/>
+
+        <text x="400" y="170" font-family="Montserrat, sans-serif" font-size="12" fill="#5A5A5A" font-weight="600">Добыча</text>
+        <text x="400" y="188" font-family="Montserrat, sans-serif" font-size="11" fill="#F7931A" font-weight="500">Майнинг: компьютеры + электричество</text>
+
+        <line x1="400" y1="202" x2="660" y2="202" stroke="#E0D8CC" stroke-width="1"/>
+
+        <text x="400" y="222" font-family="Montserrat, sans-serif" font-size="12" fill="#5A5A5A" font-weight="600">Хранение</text>
+        <text x="400" y="240" font-family="Montserrat, sans-serif" font-size="11" fill="#F7931A" font-weight="500">Кошелёк на телефоне или USB-флешке</text>
+
+        <line x1="400" y1="254" x2="660" y2="254" stroke="#E0D8CC" stroke-width="1"/>
+
+        <text x="400" y="274" font-family="Montserrat, sans-serif" font-size="12" fill="#5A5A5A" font-weight="600">Перевод</text>
+        <text x="400" y="292" font-family="Montserrat, sans-serif" font-size="11" fill="#F7931A" font-weight="500">Куда угодно за 10–60 минут</text>
+
+        <line x1="400" y1="306" x2="660" y2="306" stroke="#E0D8CC" stroke-width="1"/>
+
+        <text x="400" y="326" font-family="Montserrat, sans-serif" font-size="12" fill="#5A5A5A" font-weight="600">Делимость</text>
+        <text x="400" y="344" font-family="Montserrat, sans-serif" font-size="11" fill="#F7931A" font-weight="500">До 0.00000001 BTC (1 сатоши)</text>
+      </svg>
+      <div class="svg-caption">Bitcoin — это как золото, только лучше по ряду параметров</div>
+    </div>
+
+    <h2>21 миллион — и ни монетой больше</h2>
+
+    <p>Это, пожалуй, самое важное свойство Bitcoin. В его коде «зашито»: всего будет выпущено <strong>ровно 21 000 000 BTC</strong>. Не 21 000 001, не 22 миллиона. Точно 21 миллион.</p>
+
+    <p>Почему это важно? Потому что обычные деньги можно печатать бесконечно. Когда правительство печатает новые доллары или рубли — каждая существующая купюра становится чуть менее ценной. Это называется <strong>инфляция</strong>. У Bitcoin инфляции в долгосрочной перспективе <strong>нет</strong> — его количество ограничено навсегда.</p>
+
+    <h3>Halving — «самоуправляемая инфляция»</h3>
+
+    <p>Каждые ~4 года награда за майнинг уменьшается вдвое. Это событие называется <strong>halving</strong> (от английского «half» — половина).</p>
+
+    <div class="timeline">
+      <div class="timeline-item btc-color">
+        <div class="timeline-dot"></div>
+        <div class="timeline-year">2009</div>
+        <div class="timeline-text">Награда: <strong>50 BTC</strong> за блок. Bitcoin стоил ~$0.</div>
+      </div>
+      <div class="timeline-item btc-color">
+        <div class="timeline-dot"></div>
+        <div class="timeline-year">2012 — 1-й halving</div>
+        <div class="timeline-text">Награда: <strong>25 BTC</strong>. Цена выросла с ~$12 до ~$1000 за год.</div>
+      </div>
+      <div class="timeline-item btc-color">
+        <div class="timeline-dot"></div>
+        <div class="timeline-year">2016 — 2-й halving</div>
+        <div class="timeline-text">Награда: <strong>12.5 BTC</strong>. Начался бычий рынок 2017 года.</div>
+      </div>
+      <div class="timeline-item btc-color">
+        <div class="timeline-dot"></div>
+        <div class="timeline-year">2020 — 3-й halving</div>
+        <div class="timeline-text">Награда: <strong>6.25 BTC</strong>. Bitcoin вырос до $69 000 в 2021.</div>
+      </div>
+      <div class="timeline-item btc-color">
+        <div class="timeline-dot"></div>
+        <div class="timeline-year">2024 — 4-й halving</div>
+        <div class="timeline-text">Награда: <strong>3.125 BTC</strong>. Текущий цикл.</div>
+      </div>
+      <div class="timeline-item btc-color">
+        <div class="timeline-dot"></div>
+        <div class="timeline-year">~2140</div>
+        <div class="timeline-text">Последний BTC будет добыт. Всего — ровно 21 000 000.</div>
+      </div>
+    </div>
+
+    <div class="key-point">
+      <div class="key-point-title">Запомни</div>
+      <p>Halving — это как если бы золотых рудников становилось всё меньше. Добывать труднее → предложение падает → при том же спросе цена растёт. Исторически после каждого halving'а цена Bitcoin значительно росла.</p>
+    </div>
+
+    <h2>Чем Bitcoin НЕ является</h2>
+
+    <p>Давай сразу разберёмся с мифами:</p>
+
+    <div class="info-block">
+      <h4>Мифы о Bitcoin:</h4>
+      <ul>
+        <li><strong>«Bitcoin — это анонимно»</strong> — Нет. Bitcoin <em>псевдоанонимен</em>. Все транзакции публичны. Если кто-то узнает, что кошелёк принадлежит тебе — он увидит все твои операции.</li>
+        <li><strong>«Bitcoin используют только преступники»</strong> — По статистике, менее 1% транзакций связано с нелегальной деятельностью. Наличными отмывают в разы больше.</li>
+        <li><strong>«Bitcoin ничем не обеспечен»</strong> — Как и доллар с 1971 года (конец золотого стандарта). Bitcoin обеспечен математикой, энергией и доверием миллионов людей.</li>
+        <li><strong>«Bitcoin — это пузырь»</strong> — Bitcoin падал на 80%+ четыре раза. И каждый раз обновлял максимумы. Пузыри так себя не ведут.</li>
+      </ul>
+    </div>
+
+    <div class="quiz" id="quiz1">
+      <h4>🧠 Проверь себя</h4>
+      <p style="margin-bottom:16px;">Сколько всего Bitcoin будет создано?</p>
+      <button class="quiz-option" onclick="checkQuiz('quiz1', this, false)">100 миллионов — как определит голосование майнеров</button>
+      <button class="quiz-option" onclick="checkQuiz('quiz1', this, true)">Ровно 21 миллион — это «зашито» в коде навсегда</button>
+      <button class="quiz-option" onclick="checkQuiz('quiz1', this, false)">Неограниченное количество, как доллары</button>
+      <button class="quiz-option" onclick="checkQuiz('quiz1', this, false)">Это решает Сатоши Накамото каждый год</button>
+      <div class="quiz-feedback correct" id="quiz1-correct">Верно! 21 миллион — жёсткий потолок. Последний Bitcoin будет добыт примерно в 2140 году.</div>
+      <div class="quiz-feedback wrong" id="quiz1-wrong">Не совсем. Подсказка: количество Bitcoin зафиксировано с самого начала и никогда не изменится.</div>
+    </div>
+
+    <div class="summary-box">
+      <h3>📋 Резюме урока</h3>
+      <ul>
+        <li>Bitcoin создан в 2009 году анонимным Сатоши Накамото как ответ на финансовый кризис</li>
+        <li>Максимальный объём — ровно 21 миллион монет навсегда</li>
+        <li>Halving (сокращение награды вдвое) происходит каждые ~4 года</li>
+        <li>Bitcoin — это «цифровое золото»: ограничен, делим, переносим, неподделываем</li>
+        <li>Bitcoin не анонимен — он псевдоанонимен. Все транзакции публичны</li>
+      </ul>
+    </div>
+
+    <div class="lesson-nav">
+      <div></div>
+      <button class="btn btn-primary" onclick="goToLesson(2)">Далее: Ethereum →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== LESSON 2: ETHEREUM ==================== -->
+<div class="lesson" id="lesson-2">
+  <div class="lesson-hero eth">
+    <div class="module-tag">Модуль 02 · Урок 05</div>
+    <h1>Ethereum: мировой компьютер</h1>
+    <div class="lesson-number">(05)</div>
+  </div>
+  <div class="lesson-body">
+
+    <h2>Bitcoin 2.0? Не совсем</h2>
+
+    <p>В 2013 году 19-летний канадский программист российского происхождения <strong>Виталик Бутерин</strong> задал себе вопрос: «А что если блокчейн — это не только про деньги?» Bitcoin доказал, что можно передавать ценность без банка. Но что если на блокчейне можно запускать <strong>программы</strong>?</p>
+
+    <p>Так родился Ethereum — платформа, которая позволяет писать и выполнять <strong>смарт-контракты</strong>: программы, которые работают на блокчейне автоматически, без посредников.</p>
+
+    <div class="analogy">
+      <div class="analogy-title">Аналогия</div>
+      <p>Если Bitcoin — это <strong>калькулятор</strong> (считает, передаёт деньги, и всё), то Ethereum — это <strong>смартфон</strong> (на нём можно запускать тысячи разных приложений). Да, смартфон тоже умеет считать. Но он умеет намного больше.</p>
+    </div>
+
+    <h2>Что такое смарт-контракт</h2>
+
+    <p>Смарт-контракт — это программа, записанная в блокчейне, которая автоматически выполняется при наступлении определённых условий. Без судей, юристов и чиновников.</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg">
+        <!-- Traditional contract -->
+        <text x="175" y="26" font-family="Oswald, sans-serif" font-size="14" fill="#D63031" text-anchor="middle" font-weight="600">ОБЫЧНЫЙ КОНТРАКТ</text>
+
+        <rect x="40" y="44" width="270" height="60" rx="8" fill="#FFEBEE" stroke="#D63031" stroke-width="1.5"/>
+        <text x="175" y="72" font-family="Montserrat, sans-serif" font-size="12" text-anchor="middle" fill="#5A5A5A">«Продавец обязуется доставить</text>
+        <text x="175" y="90" font-family="Montserrat, sans-serif" font-size="12" text-anchor="middle" fill="#5A5A5A">товар в течение 7 дней»</text>
+
+        <text x="175" y="128" font-family="Montserrat, sans-serif" font-size="11" text-anchor="middle" fill="#8A8A8A">А если не доставит?</text>
+        <line x1="175" y1="134" x2="175" y2="150" stroke="#8A8A8A" stroke-width="1.5"/>
+        <polygon points="170,148 175,156 180,148" fill="#8A8A8A"/>
+
+        <rect x="70" y="160" width="210" height="50" rx="8" fill="#FFFDF8" stroke="#8A8A8A" stroke-width="1.5"/>
+        <text x="175" y="183" font-family="Montserrat, sans-serif" font-size="11" text-anchor="middle" fill="#5A5A5A">🏛️ Суд → Юристы → Месяцы → $$$</text>
+        <text x="175" y="200" font-family="Montserrat, sans-serif" font-size="10" text-anchor="middle" fill="#D63031">долго, дорого, неопределённо</text>
+
+        <!-- Divider -->
+        <line x1="360" y1="16" x2="360" y2="280" stroke="#E0D8CC" stroke-width="1" stroke-dasharray="6,4"/>
+
+        <!-- Smart contract -->
+        <text x="545" y="26" font-family="Oswald, sans-serif" font-size="14" fill="#627EEA" text-anchor="middle" font-weight="600">СМАРТ-КОНТРАКТ</text>
+
+        <rect x="410" y="44" width="270" height="60" rx="8" fill="#E8EAF6" stroke="#627EEA" stroke-width="1.5"/>
+        <text x="545" y="66" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle" fill="#627EEA">if (доставка == true) {</text>
+        <text x="545" y="82" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle" fill="#627EEA">  перевести(деньги, продавцу)</text>
+        <text x="545" y="98" font-family="JetBrains Mono, monospace" font-size="11" text-anchor="middle" fill="#627EEA">}</text>
+
+        <!-- Two branches -->
+        <line x1="495" y1="104" x2="470" y2="140" stroke="#2E7D32" stroke-width="1.5"/>
+        <line x1="595" y1="104" x2="620" y2="140" stroke="#D63031" stroke-width="1.5"/>
+
+        <!-- Delivered -->
+        <rect x="395" y="144" width="150" height="50" rx="8" fill="#E8F5E9" stroke="#2E7D32" stroke-width="1.5"/>
+        <text x="470" y="166" font-family="Montserrat, sans-serif" font-size="11" text-anchor="middle" fill="#2E7D32" font-weight="600">✓ Доставлено</text>
+        <text x="470" y="184" font-family="Montserrat, sans-serif" font-size="10" text-anchor="middle" fill="#2E7D32">Деньги → продавцу</text>
+
+        <!-- Not delivered -->
+        <rect x="565" y="144" width="150" height="50" rx="8" fill="#FFEBEE" stroke="#D63031" stroke-width="1.5"/>
+        <text x="640" y="166" font-family="Montserrat, sans-serif" font-size="11" text-anchor="middle" fill="#D63031" font-weight="600">✗ Не доставлено</text>
+        <text x="640" y="184" font-family="Montserrat, sans-serif" font-size="10" text-anchor="middle" fill="#D63031">Деньги → покупателю</text>
+
+        <text x="545" y="228" font-family="Montserrat, sans-serif" font-size="11" text-anchor="middle" fill="#627EEA" font-weight="500">⚡ Автоматически, мгновенно, бесплатно</text>
+        <text x="545" y="248" font-family="Montserrat, sans-serif" font-size="10" text-anchor="middle" fill="#8A8A8A">Никто не может вмешаться или отменить</text>
+      </svg>
+      <div class="svg-caption">Обычный контракт vs смарт-контракт на блокчейне</div>
+    </div>
+
+    <h2>Что можно строить на Ethereum</h2>
+
+    <p>Благодаря смарт-контрактам, на Ethereum появилась целая экосистема приложений. Их называют <strong>dApps</strong> (decentralized applications — децентрализованные приложения):</p>
+
+    <div class="info-block">
+      <div class="binary-bg">0100 0101 0111 0100
+0110 1000 0110 0101
+0111 0010 0110 0101
+0111 0101 0110 1101</div>
+      <h4>Что работает на Ethereum:</h4>
+      <ul>
+        <li><strong>DeFi (децентрализованные финансы)</strong> — кредиты, вклады, обмен валют — всё без банков. Uniswap, Aave, Compound.</li>
+        <li><strong>NFT (невзаимозаменяемые токены)</strong> — уникальные цифровые объекты: искусство, музыка, билеты, игровые предметы.</li>
+        <li><strong>DAO (децентрализованные организации)</strong> — компании, которыми управляют не директора, а голосования держателей токенов.</li>
+        <li><strong>Стейблкоины</strong> — криптовалюты с привязкой к доллару (USDT, USDC, DAI).</li>
+        <li><strong>Токенизация</strong> — перевод реальных активов (недвижимость, акции, золото) в цифровую форму.</li>
+      </ul>
+    </div>
+
+    <h2>ETH — не просто валюта</h2>
+
+    <p>Ether (ETH) — внутренняя валюта Ethereum. Но в отличие от Bitcoin, у ETH <strong>нет жёсткого потолка</strong> (нет лимита в 21 миллион). Зато ETH нужен для другого — это <strong>топливо</strong> сети.</p>
+
+    <p>Каждый раз, когда ты запускаешь смарт-контракт, обмениваешь токены на бирже или минтишь NFT — ты платишь комиссию в ETH. Это называется <strong>gas fee</strong> (плата за газ). Без ETH сеть Ethereum не работает — как машина не едет без бензина.</p>
+
+    <div class="analogy">
+      <div class="analogy-title">Аналогия</div>
+      <p>Bitcoin — это цифровое <strong>золото</strong>: ты покупаешь его и хранишь как ценность. ETH — это цифровой <strong>бензин</strong>: он питает огромную платформу с тысячами приложений. Золото хранят в сейфе. Бензин заливают в двигатель.</p>
+    </div>
+
+    <h2>The Merge: как Ethereum стал «зелёным»</h2>
+
+    <p>В сентябре 2022 года произошло одно из крупнейших событий в истории крипты — <strong>The Merge</strong> (слияние). Ethereum полностью перешёл с Proof of Work (как у Bitcoin) на <strong>Proof of Stake</strong>.</p>
+
+    <div class="comparison">
+      <div class="comparison-col">
+        <h4>До The Merge (PoW)</h4>
+        <p style="font-size:13px;color:var(--text-light);">Майнеры жгли электричество, как целые страны. Годовое потребление Ethereum = Чили.</p>
+        <p style="font-size:32px;text-align:center;margin:8px 0;">⚡🔥</p>
+      </div>
+      <div class="comparison-col" style="border-color:#2E7D32;">
+        <h4>После The Merge (PoS)</h4>
+        <p style="font-size:13px;color:var(--text-light);">Энергопотребление снизилось на 99.95%. Валидаторы «ставят» ETH вместо сжигания энергии.</p>
+        <p style="font-size:32px;text-align:center;margin:8px 0;">🌿✨</p>
+      </div>
+    </div>
+
+    <h2>Bitcoin и Ethereum — не конкуренты</h2>
+
+    <p>Это частое заблуждение: «Что лучше — Bitcoin или Ethereum?» Ответ — они для <strong>разных задач</strong>.</p>
+
+    <table class="data-table">
+      <thead>
+        <tr><th>Параметр</th><th>Bitcoin (BTC)</th><th>Ethereum (ETH)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="label-cell">Цель</td><td>Хранение ценности</td><td>Платформа для приложений</td></tr>
+        <tr><td class="label-cell">Аналогия</td><td>Цифровое золото</td><td>Мировой компьютер</td></tr>
+        <tr><td class="label-cell">Максимум монет</td><td>21 000 000</td><td>Нет жёсткого лимита</td></tr>
+        <tr><td class="label-cell">Консенсус</td><td>Proof of Work</td><td>Proof of Stake</td></tr>
+        <tr><td class="label-cell">Скорость блока</td><td>~10 минут</td><td>~12 секунд</td></tr>
+        <tr><td class="label-cell">Смарт-контракты</td><td>Ограниченно</td><td>Полноценные (Solidity)</td></tr>
+        <tr><td class="label-cell">Создатель</td><td>Сатоши Накамото (аноним)</td><td>Виталик Бутерин (публичен)</td></tr>
+        <tr><td class="label-cell">Запуск</td><td>2009</td><td>2015</td></tr>
+      </tbody>
+    </table>
+
+    <div class="quiz" id="quiz2">
+      <h4>🧠 Проверь себя</h4>
+      <p style="margin-bottom:16px;">Что такое смарт-контракт?</p>
+      <button class="quiz-option" onclick="checkQuiz('quiz2', this, false)">Договор, подписанный на смартфоне</button>
+      <button class="quiz-option" onclick="checkQuiz('quiz2', this, false)">Специальная криптовалюта для юристов</button>
+      <button class="quiz-option" onclick="checkQuiz('quiz2', this, true)">Программа в блокчейне, которая автоматически выполняется при наступлении условий</button>
+      <button class="quiz-option" onclick="checkQuiz('quiz2', this, false)">PDF-документ с электронной подписью</button>
+      <div class="quiz-feedback correct" id="quiz2-correct">Точно! Смарт-контракт — это «если... то...», записанное в блокчейне и работающее без посредников.</div>
+      <div class="quiz-feedback wrong" id="quiz2-wrong">Не совсем. Ключевое слово — «программа». Смарт-контракт — это код, который выполняется автоматически.</div>
+    </div>
+
+    <div class="summary-box">
+      <h3>📋 Резюме урока</h3>
+      <ul>
+        <li>Ethereum создан Виталиком Бутериным в 2015 году как платформа для смарт-контрактов</li>
+        <li>Смарт-контракт — программа в блокчейне, которая выполняется автоматически</li>
+        <li>На Ethereum работают DeFi, NFT, DAO, стейблкоины и тысячи dApps</li>
+        <li>ETH — топливо сети (gas fee). Без него ничего не работает</li>
+        <li>После The Merge (2022) Ethereum потребляет на 99.95% меньше энергии</li>
+        <li>Bitcoin и Ethereum — не конкуренты. Они для разных задач</li>
+      </ul>
+    </div>
+
+    <div class="lesson-nav">
+      <button class="btn btn-secondary" onclick="goToLesson(1)">← Предыдущий урок</button>
+      <button class="btn btn-primary" onclick="goToLesson(3)">Далее: Токены vs Коины →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== LESSON 3: TOKENS vs COINS ==================== -->
+<div class="lesson" id="lesson-3">
+  <div class="lesson-hero tokens">
+    <div class="module-tag">Модуль 02 · Урок 06</div>
+    <h1>Токены vs Коины</h1>
+    <div class="lesson-number">(06)</div>
+  </div>
+  <div class="lesson-body">
+
+    <h2>Казалось бы, какая разница?</h2>
+
+    <p>Новички часто используют слова «токен» и «коин» как синонимы. Но в крипте это <strong>разные вещи</strong>. И понимать разницу — важно, потому что от этого зависит, что ты покупаешь и на какой сети это работает.</p>
+
+    <p>Давай разберёмся раз и навсегда.</p>
+
+    <h2>Коин (Coin) — «родная» валюта блокчейна</h2>
+
+    <p>Коин — это криптовалюта, которая живёт на <strong>собственном блокчейне</strong>. У неё свой дом, свои правила, своя инфраструктура.</p>
+
+    <div class="info-block">
+      <h4>Примеры коинов:</h4>
+      <ul>
+        <li><strong>BTC</strong> — живёт на блокчейне Bitcoin</li>
+        <li><strong>ETH</strong> — живёт на блокчейне Ethereum</li>
+        <li><strong>BNB</strong> — живёт на BNB Chain (экосистема Binance)</li>
+        <li><strong>SOL</strong> — живёт на блокчейне Solana</li>
+        <li><strong>ADA</strong> — живёт на блокчейне Cardano</li>
+      </ul>
+    </div>
+
+    <div class="analogy">
+      <div class="analogy-title">Аналогия</div>
+      <p>Коин — это как <strong>национальная валюта</strong>. Евро — это «коин» Евросоюза. Он «живёт» в своей экономике, имеет свой центробанк, свои правила. Рубль — «коин» России. У каждой страны (блокчейна) — свой коин.</p>
+    </div>
+
+    <h2>Токен (Token) — «гость» в чужом блокчейне</h2>
+
+    <p>Токен — это криптоактив, который создан <strong>на базе существующего блокчейна</strong>. У него нет собственной сети — он «живёт в аренде».</p>
+
+    <p>Самый популярный стандарт для создания токенов — <strong>ERC-20</strong> на Ethereum. Это как шаблон: любой разработчик может создать свой токен за пару часов, используя смарт-контракт.</p>
+
+    <div class="info-block">
+      <h4>Примеры токенов:</h4>
+      <ul>
+        <li><strong>USDT (Tether)</strong> — стейблкоин, работает на Ethereum, Tron и других сетях</li>
+        <li><strong>USDC</strong> — стейблкоин от Circle, работает на Ethereum, Solana и др.</li>
+        <li><strong>LINK (Chainlink)</strong> — токен оракулов, ERC-20 на Ethereum</li>
+        <li><strong>UNI (Uniswap)</strong> — governance-токен биржи Uniswap, ERC-20</li>
+        <li><strong>SHIB (Shiba Inu)</strong> — мем-токен, ERC-20 на Ethereum</li>
+      </ul>
+    </div>
+
+    <div class="analogy">
+      <div class="analogy-title">Аналогия</div>
+      <p>Токен — это как <strong>подарочная карта магазина</strong>. Она существует внутри экосистемы этого магазина. Ты не можешь открыть свой банк с ней — но внутри системы она имеет ценность. А «магазин» в данном случае — Ethereum (или другой блокчейн).</p>
+    </div>
+
+    <h2>Наглядная разница</h2>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 720 400" xmlns="http://www.w3.org/2000/svg">
+        <!-- Coin side -->
+        <text x="190" y="30" font-family="Oswald, sans-serif" font-size="16" fill="#F7931A" text-anchor="middle" font-weight="600">КОИНЫ (COINS)</text>
+
+        <!-- Bitcoin blockchain -->
+        <rect x="30" y="50" width="320" height="80" rx="12" fill="#FFF8E1" stroke="#F7931A" stroke-width="2"/>
+        <text x="50" y="78" font-family="Oswald, sans-serif" font-size="13" fill="#F7931A" font-weight="600">БЛОКЧЕЙН BITCOIN</text>
+        <rect x="240" y="62" width="90" height="36" rx="18" fill="#F7931A"/>
+        <text x="285" y="85" font-family="Oswald, sans-serif" font-size="13" fill="white" text-anchor="middle" font-weight="600">BTC</text>
+        <text x="50" y="118" font-family="Montserrat, sans-serif" font-size="10" fill="#8A8A8A">Свой блокчейн · Свой коин</text>
+
+        <!-- Ethereum blockchain -->
+        <rect x="30" y="150" width="320" height="80" rx="12" fill="#E8EAF6" stroke="#627EEA" stroke-width="2"/>
+        <text x="50" y="178" font-family="Oswald, sans-serif" font-size="13" fill="#627EEA" font-weight="600">БЛОКЧЕЙН ETHEREUM</text>
+        <rect x="240" y="162" width="90" height="36" rx="18" fill="#627EEA"/>
+        <text x="285" y="185" font-family="Oswald, sans-serif" font-size="13" fill="white" text-anchor="middle" font-weight="600">ETH</text>
+        <text x="50" y="218" font-family="Montserrat, sans-serif" font-size="10" fill="#8A8A8A">Свой блокчейн · Свой коин</text>
+
+        <!-- Solana blockchain -->
+        <rect x="30" y="250" width="320" height="80" rx="12" fill="#E8F5E9" stroke="#00897B" stroke-width="2"/>
+        <text x="50" y="278" font-family="Oswald, sans-serif" font-size="13" fill="#00897B" font-weight="600">БЛОКЧЕЙН SOLANA</text>
+        <rect x="240" y="262" width="90" height="36" rx="18" fill="#00897B"/>
+        <text x="285" y="285" font-family="Oswald, sans-serif" font-size="13" fill="white" text-anchor="middle" font-weight="600">SOL</text>
+        <text x="50" y="318" font-family="Montserrat, sans-serif" font-size="10" fill="#8A8A8A">Свой блокчейн · Свой коин</text>
+
+        <!-- Divider -->
+        <line x1="380" y1="20" x2="380" y2="380" stroke="#E0D8CC" stroke-width="1" stroke-dasharray="6,4"/>
+
+        <!-- Token side -->
+        <text x="550" y="30" font-family="Oswald, sans-serif" font-size="16" fill="#627EEA" text-anchor="middle" font-weight="600">ТОКЕНЫ (TOKENS)</text>
+
+        <!-- Ethereum as host -->
+        <rect x="400" y="50" width="300" height="290" rx="14" fill="#E8EAF6" stroke="#627EEA" stroke-width="2" stroke-dasharray="6,3"/>
+        <text x="420" y="78" font-family="Oswald, sans-serif" font-size="12" fill="#627EEA" font-weight="600">НА БЛОКЧЕЙНЕ ETHEREUM:</text>
+
+        <!-- Tokens inside -->
+        <rect x="420" y="96" width="120" height="36" rx="18" fill="#26A69A"/>
+        <text x="480" y="119" font-family="Oswald, sans-serif" font-size="12" fill="white" text-anchor="middle" font-weight="600">USDT</text>
+
+        <rect x="556" y="96" width="120" height="36" rx="18" fill="#1565C0"/>
+        <text x="616" y="119" font-family="Oswald, sans-serif" font-size="12" fill="white" text-anchor="middle" font-weight="600">USDC</text>
+
+        <rect x="420" y="148" width="120" height="36" rx="18" fill="#2962FF"/>
+        <text x="480" y="171" font-family="Oswald, sans-serif" font-size="12" fill="white" text-anchor="middle" font-weight="600">LINK</text>
+
+        <rect x="556" y="148" width="120" height="36" rx="18" fill="#FF69B4"/>
+        <text x="616" y="171" font-family="Oswald, sans-serif" font-size="12" fill="white" text-anchor="middle" font-weight="600">UNI</text>
+
+        <rect x="420" y="200" width="120" height="36" rx="18" fill="#FFA726"/>
+        <text x="480" y="223" font-family="Oswald, sans-serif" font-size="12" fill="white" text-anchor="middle" font-weight="600">SHIB</text>
+
+        <rect x="556" y="200" width="120" height="36" rx="18" fill="#AB47BC"/>
+        <text x="616" y="223" font-family="Oswald, sans-serif" font-size="12" fill="white" text-anchor="middle" font-weight="600">APE</text>
+
+        <text x="550" y="265" font-family="Montserrat, sans-serif" font-size="11" text-anchor="middle" fill="#627EEA" font-weight="500">Все работают на чужом блокчейне</text>
+        <text x="550" y="283" font-family="Montserrat, sans-serif" font-size="10" text-anchor="middle" fill="#8A8A8A">Стандарт ERC-20</text>
+
+        <text x="550" y="310" font-family="Montserrat, sans-serif" font-size="10" text-anchor="middle" fill="#8A8A8A">Для перевода любого из этих токенов</text>
+        <text x="550" y="326" font-family="Montserrat, sans-serif" font-size="10" text-anchor="middle" fill="#627EEA" font-weight="600">ты платишь комиссию в ETH (gas)</text>
+
+        <!-- Bottom label -->
+        <text x="360" y="390" font-family="Montserrat, sans-serif" font-size="12" text-anchor="middle" fill="#8A8A8A" font-style="italic">Коин = свой дом. Токен = живёт в гостях.</text>
+      </svg>
+      <div class="svg-caption">Коины живут на собственном блокчейне, токены — «в гостях» на чужом</div>
+    </div>
+
+    <h2>Почему один токен может быть на разных сетях</h2>
+
+    <p>Вот это ловушка для новичков. <strong>USDT</strong>, например, существует одновременно на Ethereum, Tron, BNB Chain, Solana и ещё десятке сетей. Это один и тот же стейблкоин (привязан к доллару), но <strong>технически это разные токены на разных блокчейнах</strong>.</p>
+
+    <div class="key-point">
+      <div class="key-point-title">Важно!</div>
+      <p>Если ты отправляешь USDT по сети Ethereum (ERC-20), а друг ждёт на сети Tron (TRC-20) — деньги <strong>не дойдут</strong> и могут быть потеряны навсегда. Всегда проверяй сеть перед отправкой! Это одна из самых частых ошибок новичков.</p>
+    </div>
+
+    <h2>Как определить — коин или токен?</h2>
+
+    <p>Простое правило:</p>
+
+    <div class="info-block">
+      <h4>Задай себе один вопрос:</h4>
+      <ul>
+        <li><strong>У этого актива есть собственный блокчейн?</strong> Если да → это <strong>коин</strong></li>
+        <li><strong>Он создан на чужом блокчейне?</strong> Если да → это <strong>токен</strong></li>
+      </ul>
+      <p style="margin-top:12px;">Исключение: некоторые проекты начинают как токен (на Ethereum), а потом запускают свой блокчейн и становятся коином. Пример — BNB: начинал как ERC-20 токен, потом Binance запустила BNB Chain, и BNB стал коином.</p>
+    </div>
+
+    <h2>Стандарты токенов — шаблоны создания</h2>
+
+    <p>На разных блокчейнах — разные стандарты для создания токенов. Вот основные:</p>
+
+    <table class="data-table">
+      <thead>
+        <tr><th>Стандарт</th><th>Блокчейн</th><th>Что это</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="label-cell" style="font-family:'JetBrains Mono',monospace;color:#627EEA;">ERC-20</td><td>Ethereum</td><td>Самый популярный стандарт для обычных токенов</td></tr>
+        <tr><td class="label-cell" style="font-family:'JetBrains Mono',monospace;color:#627EEA;">ERC-721</td><td>Ethereum</td><td>Стандарт для NFT (уникальных токенов)</td></tr>
+        <tr><td class="label-cell" style="font-family:'JetBrains Mono',monospace;color:#F7931A;">BEP-20</td><td>BNB Chain</td><td>Аналог ERC-20, но на сети Binance</td></tr>
+        <tr><td class="label-cell" style="font-family:'JetBrains Mono',monospace;color:#D63031;">TRC-20</td><td>Tron</td><td>Стандарт для токенов на Tron (популярен для USDT)</td></tr>
+        <tr><td class="label-cell" style="font-family:'JetBrains Mono',monospace;color:#00897B;">SPL</td><td>Solana</td><td>Стандарт для токенов на Solana</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Почему это важно для тебя</h2>
+
+    <p>Когда ты покупаешь криптоактив, тебе нужно знать три вещи:</p>
+
+    <div class="info-block">
+      <ul>
+        <li><strong>Что это — коин или токен?</strong> Коин = собственная сеть с инфраструктурой. Токен = проект поверх существующей сети.</li>
+        <li><strong>На какой сети он живёт?</strong> От этого зависит, какой кошелёк тебе нужен и какую комиссию ты заплатишь.</li>
+        <li><strong>Какой стандарт?</strong> ERC-20, BEP-20, TRC-20 — от этого зависит, на какой адрес отправлять. Ошибка = потеря денег.</li>
+      </ul>
+    </div>
+
+    <div class="quiz" id="quiz3">
+      <h4>🧠 Проверь себя</h4>
+      <p style="margin-bottom:16px;">USDT (Tether) — это коин или токен?</p>
+      <button class="quiz-option" onclick="checkQuiz('quiz3', this, false)">Коин — у него же есть своя криптовалюта</button>
+      <button class="quiz-option" onclick="checkQuiz('quiz3', this, true)">Токен — он живёт на чужих блокчейнах (Ethereum, Tron и др.)</button>
+      <button class="quiz-option" onclick="checkQuiz('quiz3', this, false)">Ни то ни другое — это стейблкоин</button>
+      <button class="quiz-option" onclick="checkQuiz('quiz3', this, false)">Зависит от курса доллара</button>
+      <div class="quiz-feedback correct" id="quiz3-correct">Верно! USDT — это токен. Он не имеет собственного блокчейна и существует на Ethereum (ERC-20), Tron (TRC-20) и других сетях.</div>
+      <div class="quiz-feedback wrong" id="quiz3-wrong">Не совсем. Задай вопрос: есть ли у USDT собственный блокчейн? Нет — значит это токен.</div>
+    </div>
+
+    <div class="summary-box">
+      <h3>📋 Резюме урока</h3>
+      <ul>
+        <li>Коин = криптовалюта на собственном блокчейне (BTC, ETH, SOL, BNB)</li>
+        <li>Токен = криптоактив, созданный на чужом блокчейне (USDT, LINK, UNI, SHIB)</li>
+        <li>Один токен может существовать на нескольких сетях — всегда проверяй сеть при переводе!</li>
+        <li>ERC-20 — самый популярный стандарт для токенов на Ethereum</li>
+        <li>Для перевода токенов нужен коин базового блокчейна (ETH для ERC-20 токенов)</li>
+      </ul>
+    </div>
+
+    <div class="key-point">
+      <div class="key-point-title">🎉 Модуль 2 пройден!</div>
+      <p>Теперь ты знаешь разницу между Bitcoin и Ethereum, понимаешь, что такое смарт-контракты, и можешь отличить коин от токена. В следующем модуле мы разберём виды криптоактивов: utility-токены, governance-токены и стейблкоины.</p>
+    </div>
+
+    <div class="lesson-nav">
+      <button class="btn btn-secondary" onclick="goToLesson(2)">← Предыдущий урок</button>
+      <a href="crypto-course-module3.html" class="btn btn-primary">Модуль 3 →</a>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+let currentLesson = 1;
+
+function goToLesson(num) {
+  document.querySelectorAll('.lesson').forEach(l => l.classList.remove('active'));
+  document.getElementById('lesson-' + num).classList.add('active');
+  document.querySelectorAll('.sidebar-item').forEach(item => {
+    const lessonNum = parseInt(item.dataset.lesson);
+    item.classList.remove('active');
+    if (lessonNum === num) item.classList.add('active');
+    if (lessonNum < num) item.classList.add('completed');
+  });
+  document.getElementById('progressFill').style.width = (num / 3 * 100) + '%';
+  document.getElementById('progressText').textContent = num + '/3';
+  currentLesson = num;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+function checkQuiz(quizId, btn, isCorrect) {
+  const quiz = document.getElementById(quizId);
+  const options = quiz.querySelectorAll('.quiz-option');
+  options.forEach(opt => {
+    opt.style.pointerEvents = 'none';
+    if (opt !== btn) opt.style.opacity = '0.4';
+  });
+  if (isCorrect) {
+    btn.classList.add('correct');
+    document.getElementById(quizId + '-correct').classList.add('show');
+  } else {
+    btn.classList.add('wrong');
+    document.getElementById(quizId + '-wrong').classList.add('show');
+    setTimeout(() => {
+      options.forEach(opt => {
+        if (opt.getAttribute('onclick').includes('true')) {
+          opt.classList.add('correct');
+          opt.style.opacity = '1';
+        }
+      });
+    }, 800);
+  }
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+</script>
+</body>
+</html>
